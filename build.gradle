@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
-apply plugin: 'java'
 apply plugin: 'com.google.protobuf'
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+project.version = '0.0.1-twttr'
+
+group = 'com.google'
+version = '0.0.1-twttr'
 
 // Customize source code layout
 sourceSets {
@@ -37,9 +43,13 @@ sourceSets {
 buildscript {
   repositories {
     mavenCentral()
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
   }
   dependencies {
     classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.6'
+    classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4+"
   }
 }
 
@@ -74,4 +84,35 @@ protobuf {
     // The artifact spec for the Protobuf Compiler
     artifact = 'com.google.protobuf:protoc:3.6.0'
   }
+}
+
+uploadArchives {
+    repositories {
+      maven {
+         name = "local"
+         url = "file://${buildDir}/repo"
+      }
+  }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            name = 'local'
+            url = "file://${buildDir}/repo"
+        }
+        maven {
+            credentials {
+                username "${artifactory_user}"
+                password "${artifactory_password}"
+            }
+            name = 'twitter'
+            url = "https://artifactory.twitter.biz:443/libs-releases-local"
+        }
+    }
 }
