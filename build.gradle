@@ -17,7 +17,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'signing'
+    // id 'signing'
     id 'com.github.johnrengelman.shadow' version '5.1.0'
     id 'com.google.protobuf' version '0.8.9'
 }
@@ -152,9 +152,9 @@ publishing {
                     }
                 }
                 scm {
-                    connection = 'scm:git:git://github.com/google/zetasketch.git'
-                    developerConnection = 'scm:git:ssh://github.com/google/zetasketch.git'
-                    url = 'https://github.com/google/zetasketch/tree/master'
+                    connection = 'scm:git:git://github.com/tc-dc/zetasketch.git'
+                    developerConnection = 'scm:git:ssh://github.com/tc-dc/zetasketch.git'
+                    url = 'https://github.com/tc-dc/zetasketch/tree/twitter'
                 }
             }
         }
@@ -162,17 +162,16 @@ publishing {
 
     repositories {
         maven {
-            def releasesRepoUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
-            def snapshotsRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
-            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
             credentials {
                 username ossrhUsername
                 password ossrhPassword
             }
+            name = 'twitter'
+            url = "https://artifactory.twitter.biz:443/libs-releases-local"
         }
     }
 }
 
-signing {
-    sign publishing.publications.shaded
-}
+// signing {
+//     sign publishing.publications.shaded
+// }
