@@ -305,15 +305,17 @@ public final class HyperLogLogPlusPlus<V> implements Aggregator<V, Long, HyperLo
   }
 
   private void checkTypeAndMerge(HyperLogLogPlusPlus<?> other) {
-    Set<Type> newTypes = EnumSet.copyOf(allowedTypes);
-    newTypes.retainAll(other.allowedTypes);
-    Preconditions.checkArgument(
-        !newTypes.isEmpty(),
-        "Aggregator of type %s is incompatible with aggregator of type %s",
-        allowedTypes,
-        other.allowedTypes);
-    allowedTypes.clear();
-    allowedTypes.addAll(newTypes);
+    if (!allowedTypes.equals(other.allowedTypes)) {
+      Set<Type> newTypes = EnumSet.copyOf(allowedTypes);
+      newTypes.retainAll(other.allowedTypes);
+      Preconditions.checkArgument(
+          !newTypes.isEmpty(),
+          "Aggregator of type %s is incompatible with aggregator of type %s",
+          allowedTypes,
+          other.allowedTypes);
+      allowedTypes.clear();
+      allowedTypes.addAll(newTypes);
+    }
 
     representation = representation.merge(other.representation);
     state.numValues += other.state.numValues;
@@ -347,6 +349,13 @@ public final class HyperLogLogPlusPlus<V> implements Aggregator<V, Long, HyperLo
   public byte[] serializeToByteArray() {
     representation = representation.compact();
     return state.toByteArray();
+  }
+
+  /**
+   * Compact the state into a more efficient form (if possible)
+   */
+  public void compact() {
+    representation = representation.compact();
   }
 
   @Override

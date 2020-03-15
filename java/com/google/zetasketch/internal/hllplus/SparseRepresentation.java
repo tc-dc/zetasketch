@@ -22,12 +22,12 @@ import com.google.zetasketch.internal.DifferenceDecoder;
 import com.google.zetasketch.internal.DifferenceEncoder;
 import com.google.zetasketch.internal.GrowingByteSlice;
 import com.google.zetasketch.internal.MergedIntIterator;
-import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.ints.IntHash.Strategy;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntIterators;
 import it.unimi.dsi.fastutil.ints.IntOpenCustomHashSet;
+
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import javax.annotation.Nullable;
@@ -82,7 +82,7 @@ public class SparseRepresentation extends Representation {
    * use 1.75x the amount of RAM than the normal representation would. It will always use less than
    * {@value #MAXIMUM_SPARSE_DATA_FRACTION} times the amount of space on disk, however.
    */
-  private static final float MAXIMUM_BUFFER_ELEMENTS_FRACTION = 1 - MAXIMUM_SPARSE_DATA_FRACTION;
+  private static final float MAXIMUM_BUFFER_ELEMENTS_FRACTION = .5f;
 
   /**
    * The maximum number of bytes that the {@link State#sparseData} may contain before we upgrade to
@@ -203,6 +203,21 @@ public class SparseRepresentation extends Representation {
     return updateRepresentation();
   }
 
+  private Representation mergeCompatibleSparseRepresentation(SparseRepresentation other) {
+    if (other.buffer.size() > 0) {
+      this.buffer.addAll(other.buffer);
+    }
+
+    final IntIterator otherData = other.dataIterator();
+    if (otherData != null) {
+      while (otherData.hasNext()) {
+        this.buffer.add(otherData.nextInt());
+      }
+    }
+
+    return updateRepresentation();
+  }
+
   private Representation downgrade(Encoding.Sparse encoding) {
     if (!encoding.isLessThan(this.encoding)) {
       return this;
@@ -232,7 +247,7 @@ public class SparseRepresentation extends Representation {
     }
 
     while (iter.hasNext()) {
-      repr = repr.addSparseValue(encoding, iter.next());
+      repr = repr.addSparseValue(encoding, iter.nextInt());
     }
 
     return repr;
@@ -274,7 +289,11 @@ public class SparseRepresentation extends Representation {
   protected Representation merge(SparseRepresentation other) {
     // TODO: Add special case when 'this' is empty and 'other' has only encoded data.
     // In that case, we can just copy over the sparse data without needing to decode and dedupe.
-    return this.addSparseValues(other.encoding, other.sortedIterator());
+    if (this.encoding.equals(other.encoding)) {
+      return this.mergeCompatibleSparseRepresentation(other);
+    } else {
+      return this.addSparseValues(other.encoding, other.sortedIterator());
+    }
   }
 
   /**
