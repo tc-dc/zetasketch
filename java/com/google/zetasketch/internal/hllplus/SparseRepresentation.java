@@ -258,8 +258,10 @@ public class SparseRepresentation extends Representation {
     // Linear counting over the number of empty sparse buckets.
     int buckets = 1 << state.sparsePrecision;
     int numZeros = buckets - state.sparseSize;
-    double estimate = buckets * Math.log((double) buckets / (double) numZeros);
-
+    double estimate = 0.0;
+    if (numZeros > 0) {
+      estimate = buckets * Math.log((double) buckets / (double) numZeros);
+    }
     return Math.round(estimate);
   }
 
