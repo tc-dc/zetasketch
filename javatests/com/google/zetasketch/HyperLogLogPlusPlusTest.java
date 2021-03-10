@@ -38,7 +38,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-
+import java.util.Base64;
 
 /**
  * Basic unit tests for {@link HyperLogLogPlusPlus}. More extensive testing is provided by the
@@ -1385,4 +1385,16 @@ public class HyperLogLogPlusPlusTest {
     assertEquals(3, aggregator.longResult());
     assertEquals(aggregator.getValueType(), valueType);
   }
+
+
+  // In BQ select HLL_COUNT.EXTRACT(FROM_BASE64("CHAQgIABGAIgn74FggcKEICAARgOIA4yAA==")) 
+  // returns 0
+  //
+  @Test
+  public void differently_initalized_sparse_state() {
+    byte[] decodedString = Base64.getDecoder().decode("CHAQgIABGAIgn74FggcKEICAARgOIA4yAA==".getBytes());
+    HyperLogLogPlusPlus<?> hll = HyperLogLogPlusPlus.forProto(decodedString);
+    assertEquals(0L, hll.longResult());
+  }
+
 }
